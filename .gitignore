@@ -1,0 +1,19 @@
+# Environments
+.env
+.venv/
+env/
+venv/
+ENV/
+
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Temporary directories and build artifacts
+tmp/
+report.html
+*.egg-info/
+dist/
+build/

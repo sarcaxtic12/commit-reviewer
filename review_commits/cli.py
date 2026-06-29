@@ -1,5 +1,7 @@
 import click
+import io
 import os
+import sys
 import time
 from dotenv import load_dotenv
 from rich.console import Console
@@ -13,16 +15,20 @@ from review_commits.server import serve
 # Load env variables from .env
 load_dotenv()
 
-console = Console()
+if not sys.stdout.encoding or sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+
+console = Console(force_terminal=True, highlight=False)
 
 @click.command()
-@click.option("--url", default=None, help="Remote Git repository URL to review.")
+@click.option("--url", default=None, show_default=True, help="Remote Git repository URL to review.")
 @click.option("--limit", default=10, show_default=True, type=int, help="Number of recent commits to review.")
 @click.option("--output", default="report.html", show_default=True,
               help="Filename to write the HTML report to.")
 @click.option("--port", default=3546, show_default=True, type=int,
               help="Port to serve the HTML report on.")
-@click.option("--no-serve", is_flag=True, default=False,
+@click.option("--no-serve", is_flag=True, default=False, show_default=True,
               help="Generate the report but do not start the local server.")
 def main(url, limit, output, port, no_serve):
     """A CLI tool to review git commit messages."""
@@ -58,6 +64,10 @@ def main(url, limit, output, port, no_serve):
     }
 
     for idx, c in enumerate(commits):
+        if idx > 0:
+            console.print("[dim]Waiting 2 seconds before the next OpenRouter request to avoid rate limits...[/dim]")
+            time.sleep(2)
+
         r = review_commit(c["message"])
         results.append({**c, "rating": r["rating"], "reason": r["reason"]})
 
@@ -72,16 +82,13 @@ def main(url, limit, output, port, no_serve):
             error += 1
 
         # Real-time console logs
-        console.print(f"[dim][{c['hash']}][/dim] [cyan]{escape(c['author'])}[/cyan] | {c['timestamp']}")
+        safe_hash = escape(f"[{c['hash']}]")
+        console.print(f"[dim]{safe_hash}[/dim] [cyan]{escape(c['author'])}[/cyan] | {c['timestamp']}")
         console.print(f'"{escape(c["message"])}"')
         
         color = rating_colors.get(r["rating"], "bold magenta")
         console.print(f"-> [{color}]{r['rating'].upper()}[/{color}]: {escape(r['reason'])}")
         console.print()
-
-        # Rate limit protection (sleep 1 second between API calls, except after the last commit)
-        if idx < len(commits) - 1:
-            time.sleep(1)
 
     # Generate summary panel
     summary_lines = [

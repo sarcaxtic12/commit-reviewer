@@ -34,9 +34,9 @@ def get_local_commits(path: str, limit: int) -> list[dict]:
                 "author": commit.author.name,
                 "timestamp": commit.committed_datetime.isoformat(),
             })
-    except git.exc.GitCommandError:
+    except (git.exc.GitCommandError, ValueError):
         # Catch errors if it's a newly initialized repository with no commits
-        return []
+        raise click.ClickException("No commits found in this repository.")
 
     return commits
 

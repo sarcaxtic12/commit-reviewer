@@ -80,13 +80,13 @@ def review_commit(message: str) -> dict:
             "reason": "Could not parse model response as JSON"
         }
 
-    if not data.get("choices"):
+    try:
+        raw_content = data["choices"][0]["message"]["content"].strip()
+    except (KeyError, IndexError, TypeError, AttributeError):
         return {
             "rating": "error",
-            "reason": "Could not parse model response as JSON"
+            "reason": "Unexpected API response shape."
         }
-
-    raw_content = data["choices"][0]["message"]["content"].strip()
 
     # Clean markdown code fences if present
     cleaned_content = re.sub(r"^```(?:json)?\s*", "", raw_content)

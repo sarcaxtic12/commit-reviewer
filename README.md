@@ -81,7 +81,7 @@ A self-contained HTML file styled with Tailwind CSS. It includes a header with t
 
 ## Project Structure
 
-```
+```text
 commit-reviewer/
 ├── review_commits/
 │   ├── __init__.py       # Package metadata
@@ -117,3 +117,18 @@ commit-reviewer/
 - Free OpenRouter model may apply rate limits for large `--limit` values
 - HTML report is written to and served from the current working directory
 - No persistent storage — each run overwrites the previous report file
+
+## Troubleshooting
+
+### `review-commits` not recognized in PowerShell
+The virtual environment's Scripts directory may not be on your PATH.
+
+Option 1 — Run via the venv directly:
+    .venv\Scripts\review-commits
+
+Option 2 — Run as a module:
+    python -m review_commits.cli
+
+Option 3 — Activate the venv first, then run:
+    .venv\Scripts\activate
+    review-commits
